@@ -2,7 +2,7 @@
 //
 // RShark -- R interface to the Shark libraries
 //
-// Copyright (C) 2010 Shane Conway
+// Copyright (C) 2010 Shane Conway and Dirk Eddelbuettel
 //
 // This file is part of the RShark library for GNU R.
 // It is made available under the terms of the GNU General Public
@@ -22,64 +22,64 @@
 
 //#include <rshark.hpp>
 
+#include <Rcpp.h>
 #include <Rng/GlobalRng.h>
 #include <ReClaM/Svm.h>
 #include <ReClaM/MeanSquaredError.h>
-#include <iostream>
 
 using namespace std;
 
-RcppExport SEXP SVM(SEXP svmParameters) {
+double sinc(double x)
+{
+    if (x == 0.0) return 1.0;
+    else return sin(x) / x;
+}
+
+RcppExport SEXP SVMregression(SEXP svmParameters) {
 
     try {
-        Rcpp::List rparam(optionParameters);
-        int examples = Rcpp::as<int>(rparam["examples"]);
+        Rcpp::List rparam(svmParameters);
+        unsigned int examples = Rcpp::as<int>(rparam["examples"]);
 
-		cout << "*** Support Vector Machine example program ***" << endl << endl;
-		cout << "The regression training data are sampled from a sinc function" << endl;
-		cout << "with additive Gaussian white noise." << endl;
-		cout << endl;
+        unsigned int e;
+        Rng::seed(42);
 
-		unsigned int e;
-		Rng::seed(42);
+        double C = 100.0;
+        double epsilon = 0.1;
+        double sigma = 2.0;
 
-		double C = 100.0;
-		double epsilon = 0.1;
-		double sigma = 2.0;
-		unsigned int examples = 100;
+        // create the sinc problem
+        Array<double> x(examples, 1);
+        Array<double> t(examples, 1);
+        Array<double> y(examples, 1);
+        for (e = 0; e < examples; e++)
+        {
+            x(e, 0) = Rng::uni(-12.0, 12.0);            // point
+            t(e, 0) = sinc(x(e, 0));                // target
+            y(e, 0) = t(e, 0) + Rng::gauss(0.0, 0.01);      // label
+        }
 
-		// create the sinc problem
-		Array<double> x(examples, 1);
-		Array<double> t(examples, 1);
-		Array<double> y(examples, 1);
-		for (e = 0; e < examples; e++)
-		{
-			x(e, 0) = Rng::uni(-12.0, 12.0);				// point
-			t(e, 0) = sinc(x(e, 0));						// target
-			y(e, 0) = t(e, 0) + Rng::gauss(0.0, 0.01);		// label
-		}
+        // create the SVM for prediction
+        double gamma = 0.5 / (sigma * sigma);
+        RBFKernel k(gamma);
+        SVM svm(&k, false);
 
-		// create the SVM for prediction
-		double gamma = 0.5 / (sigma * sigma);
-		RBFKernel k(gamma);
-		SVM svm(&k, false);
+        // create a training scheme and an optimizer for learning
+        Epsilon_SVM esvm(&svm, C, epsilon);
+        SVM_Optimizer SVMopt;
+        SVMopt.init(esvm);
 
-		// create a training scheme and an optimizer for learning
-		Epsilon_SVM esvm(&svm, C, epsilon);
-		SVM_Optimizer SVMopt;
-		SVMopt.init(esvm);
+        // train the SVM
+        SVMopt.optimize(svm, x, y);
 
-		// train the SVM
-		cout << "Support Vector Machine training ..." << flush;
-		SVMopt.optimize(svm, x, y);
-		cout << " done." << endl << endl;
+        // compute the mean squared error on the training data:
+        MeanSquaredError mse;
+        double err = mse.error(svm, x, t);
 
-		// compute the mean squared error on the training data:
-		MeanSquaredError mse;
-		double err = mse.error(svm, x, t);
-		cout << "mean squared error on the training data: " << err << endl << endl;
+        Rcpp::List rl = R_NilValue;
+        rl = Rcpp::List::create(Rcpp::Named("err") = err);
 
-        return Rcpp::wrap(err);
+        return rl;
 
     } catch(std::exception &ex) {
         forward_exception_to_r(ex);
@@ -89,5 +89,3 @@ RcppExport SEXP SVM(SEXP svmParameters) {
 
     return R_NilValue;
 }
-
-

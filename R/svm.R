@@ -1,6 +1,6 @@
-## RShark -- R interface to the Shark libraries
+## rshark -- R interface to the Shark libraries
 ##
-## Copyright (C) 2010  Shane Conway	<shane.conway@gmail.com>
+## Copyright (C) 2010  Shane Conway and Dirk Eddelbuettel
 ##
 ## This file is part of the RShark library for GNU R.
 ## It is made available under the terms of the GNU General Public
@@ -20,11 +20,11 @@
 
 svm <- function(...){
 
-     val <- .Call("SVM",
+     val <- .Call("SVMregression",
                      list(
-   		          yield=as.double(yield),
+   		          error=as.double(error),
 	                  ),
-                 PACKAGE="RShark")
+                 PACKAGE="rshark")
      class(val) <- c("shark.svm")
      val
 }
