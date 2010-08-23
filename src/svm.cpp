@@ -39,7 +39,7 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
 
     try {
         Rcpp::List rparam(svmParameters);
-        unsigned int examples = Rcpp::as<int>(rparam["examples"]);
+        unsigned int examples = Rcpp::as<unsigned int>(rparam["examples"]);
 
         unsigned int e;
         Rng::seed(42);
@@ -76,10 +76,12 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
         MeanSquaredError mse;
         double err = mse.error(svm, x, t);
 
-        Rcpp::List rl = R_NilValue;
-        rl = Rcpp::List::create(Rcpp::Named("err") = err);
-
-        return rl;
+        //Rcpp::List rl = R_NilValue;
+        //rl = Rcpp::List::create(Rcpp::Named("err") = err);
+        //return rl;
+        
+        // single return
+        return Rcpp::wrap(err);
 
     } catch(std::exception &ex) {
         forward_exception_to_r(ex);

@@ -18,15 +18,13 @@
 ## Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 ## MA 02111-1307, USA
 
-svm <- function(...){
+svm <- function(examples, ...){
 
-     val <- .Call("SVMregression",
-                     list(
-   		          error=as.double(error),
-	                  ),
-                 PACKAGE="rshark")
-     class(val) <- c("shark.svm")
-     val
+    val <- .Call("SVMregression",
+                 list(examples=examples),
+                 PACKAGE="RShark")
+    class(val) <- c("shark.svm")
+    val
 }
 
 # Generic methods
