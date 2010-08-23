@@ -1,18 +1,16 @@
 # -*- mode: Makefile -*-
 #
-# Copyright 2010 	Shane Conway
+# Copyright 2010 	Shane Conway and Dirk Eddelbuettel
 
-#RCPP_INCFLAGS	= `Rscript -e 'Rcpp:::CxxFlags()'`
 RCPP_LDFLAGS	= `Rscript -e 'Rcpp:::LdFlags()'`
 
 BIN		= RShark.dll
-#CXXFLAGS	= -I$(RHOME)/include -I$(RHOME)/src/include $(RCPP_INCFLAGS) -I$(SHARK_ROOT) -Wall -O2
-CXXFLAGS	= -I$(RHOME)/include -I$(RHOME)/src/include -I. -I$(SHARK_ROOT) -Wall -O2
+CXXFLAGS	= -I$(RHOME)/include -I$(RHOME)/library/Rcpp/include -I. -I$(SHARK_ROOT)/include -Wall -O2
 
 SOURCES		:= $(wildcard *.cpp)
 LINKOBJ		:= $(SOURCES:.cpp=.o)
 
-DLLLIBS		= -s -L$(RHOME)/bin -lR $(RCPP_LDFLAGS) -L$(SHARK_ROOT)/lib -lShark-mgw-0_9_9
+DLLLIBS		= -s -L$(RHOME)/bin -lR $(RCPP_LDFLAGS) -L$(SHARK_ROOT)/lib -lshark
 
 .PHONY: 	all clean
 
