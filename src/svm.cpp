@@ -20,7 +20,7 @@
 // Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 // MA 02111-1307, USA
 
-//#include <rshark.hpp>
+//#include <rshark.h>
 
 #include <Rcpp.h>
 #include <Rng/GlobalRng.h>
