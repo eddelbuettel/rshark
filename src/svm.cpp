@@ -40,13 +40,18 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
     try {
         Rcpp::List rparam(svmParameters);
         unsigned int examples = Rcpp::as<unsigned int>(rparam["examples"]);
+        double C = Rcpp::as<double>(rparam["C"]);
+        double epsilon = Rcpp::as<double>(rparam["epsilon"]);
+        double sigma = Rcpp::as<double>(rparam["sigma"]);
+        string type = Rcpp::as<string>(rparam["type"]);
+        string kernel = Rcpp::as<string>(rparam["kernel"]);
 
         unsigned int e;
         Rng::seed(42);
 
-        double C = 100.0;
-        double epsilon = 0.1;
-        double sigma = 2.0;
+        //double C = 100.0;
+        //double epsilon = 0.1;
+        //double sigma = 2.0;
 
         // create the sinc problem
         Array<double> x(examples, 1);
@@ -76,12 +81,19 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
         MeanSquaredError mse;
         double err = mse.error(svm, x, t);
 
-        //Rcpp::List rl = R_NilValue;
-        //rl = Rcpp::List::create(Rcpp::Named("err") = err);
-        //return rl;
+        unsigned int dimension = svm.getDimension();
+
+        // 	cout << "coefficients:" << endl;
+        // 	int i;
+        // 	for (i=0; i<100; i++) printf("alpha[%d] = %g\n", i, svm.getAlpha(i));
+
+        Rcpp::List rl = R_NilValue;
+        rl = Rcpp::List::create(Rcpp::Named("error") = err,
+        		Rcpp::Named("dimension") = dimension);
+        return rl;
         
         // single return
-        return Rcpp::wrap(err);
+        //return Rcpp::wrap(err);
 
     } catch(std::exception &ex) {
         forward_exception_to_r(ex);

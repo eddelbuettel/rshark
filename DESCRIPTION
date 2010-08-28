@@ -1,4 +1,4 @@
-Package: RShark
+Package: rshark
 Title: R interface to the Shark machine learning library
 Version: 0.0.1
 Date: 2010-08-22

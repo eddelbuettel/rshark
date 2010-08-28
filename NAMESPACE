@@ -1,10 +1,10 @@
 import("Rcpp")
-useDynLib(RShark)
+useDynLib(rshark)
 
 exportPattern("*.default")
 
 export(
-       "svm"
+       "ssvm"
        )
 
 #S3method("plot", "svm")
