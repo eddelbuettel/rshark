@@ -20,6 +20,8 @@
 // Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
 // MA 02111-1307, USA
 
+// Exposing the SVM classes in Shark: http://shark-project.sourceforge.net/ReClaM/index.html#supportvectormachines
+
 //#include <rshark.h>
 
 #include <Rcpp.h>
@@ -40,6 +42,8 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
     try {
         Rcpp::List rparam(svmParameters);
         unsigned int examples = Rcpp::as<unsigned int>(rparam["examples"]);
+        //Rcpp::NumericVector rates(ratesVec);
+		//Rcpp::as<std::vector <double> >(rates)
         double C = Rcpp::as<double>(rparam["C"]);
         double epsilon = Rcpp::as<double>(rparam["epsilon"]);
         double sigma = Rcpp::as<double>(rparam["sigma"]);
@@ -48,10 +52,6 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
 
         unsigned int e;
         Rng::seed(42);
-
-        //double C = 100.0;
-        //double epsilon = 0.1;
-        //double sigma = 2.0;
 
         // create the sinc problem
         Array<double> x(examples, 1);
@@ -64,15 +64,24 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
             y(e, 0) = t(e, 0) + Rng::gauss(0.0, 0.01);      // label
         }
 
-        // create the SVM for prediction
+        // create the kernel function
         double gamma = 0.5 / (sigma * sigma);
         RBFKernel k(gamma);
+
+        // create the SVM for prediction
         SVM svm(&k, false);
 
         // create a training scheme and an optimizer for learning
-        Epsilon_SVM esvm(&svm, C, epsilon);
+        if(type=="eps-svr") {
+        	Epsilon_SVM t_svm(&svm, C, epsilon);
+        } else if(type=="C_svc") {
+        	return R_NilValue;
+        	//C_SVM t_svm(&svm, Cplus, Cminus);
+        } else {
+        	return R_NilValue;
+        }
         SVM_Optimizer SVMopt;
-        SVMopt.init(esvm);
+        SVMopt.init(t_svm);
 
         // train the SVM
         SVMopt.optimize(svm, x, y);
@@ -82,6 +91,7 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
         double err = mse.error(svm, x, t);
 
         unsigned int dimension = svm.getDimension();
+        unsigned int offset = svm.getOffset();
 
         // 	cout << "coefficients:" << endl;
         // 	int i;
@@ -89,11 +99,9 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
 
         Rcpp::List rl = R_NilValue;
         rl = Rcpp::List::create(Rcpp::Named("error") = err,
+        		Rcpp::Named("offset") = offset,
         		Rcpp::Named("dimension") = dimension);
         return rl;
-        
-        // single return
-        //return Rcpp::wrap(err);
 
     } catch(std::exception &ex) {
         forward_exception_to_r(ex);

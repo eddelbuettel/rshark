@@ -21,7 +21,7 @@
 ssvm <- function(x, y = NULL, scaled = TRUE, type = "C_SVM", kernel ="rbfdot", 
 		kpar = "automatic", C = 1, nu = 0.2, epsilon = 0.1, 
 		prob.model = FALSE, class.weights = NULL, cross = 0, fit = TRUE,
-		cache = 40, tol = 0.001, shrinking = TRUE, ..., 
+		cache = 40, tol = 0.001, shrinking = TRUE, sigma=1, ..., 
 		subset, na.action = na.omit, examples=50) {
 
     val <- .Call("SVMregression",
