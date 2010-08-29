@@ -43,7 +43,7 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
         Rcpp::List rparam(svmParameters);
         unsigned int examples = Rcpp::as<unsigned int>(rparam["examples"]);
         //Rcpp::NumericVector rates(ratesVec);
-		//Rcpp::as<std::vector <double> >(rates)
+	//Rcpp::as<std::vector <double> >(rates)
         double C = Rcpp::as<double>(rparam["C"]);
         double epsilon = Rcpp::as<double>(rparam["epsilon"]);
         double sigma = Rcpp::as<double>(rparam["sigma"]);
@@ -71,6 +71,8 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
         // create the SVM for prediction
         SVM svm(&k, false);
 
+        Epsilon_SVM t_svm(&svm, C, epsilon);
+
         // create a training scheme and an optimizer for learning
         if(type=="eps-svr") {
         	Epsilon_SVM t_svm(&svm, C, epsilon);
@@ -92,14 +94,18 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
 
         unsigned int dimension = svm.getDimension();
         unsigned int offset = svm.getOffset();
+        unsigned int nSV = svm.getExamples();
 
-        // 	cout << "coefficients:" << endl;
-        // 	int i;
-        // 	for (i=0; i<100; i++) printf("alpha[%d] = %g\n", i, svm.getAlpha(i));
+        // Find the support vector
+        Rcpp::NumericVector support(nSV);
+        int i;
+        for (i=0; i<nSV; i++) support[i] = svm.getAlpha(i);
 
         Rcpp::List rl = R_NilValue;
         rl = Rcpp::List::create(Rcpp::Named("error") = err,
         		Rcpp::Named("offset") = offset,
+        		Rcpp::Named("nSV") = nSV,
+        		Rcpp::Named("support.vector") = support,
         		Rcpp::Named("dimension") = dimension);
         return rl;
 
