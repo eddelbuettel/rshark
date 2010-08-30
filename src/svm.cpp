@@ -37,75 +37,106 @@ double sinc(double x)
     else return sin(x) / x;
 }
 
+SVM R_Epsilon_SVM(SVM svm, double C, double epsilon, Array<double> x, Array<double> y) {
+
+	Epsilon_SVM t_svm(&svm, C, epsilon);
+	SVM_Optimizer SVMopt;
+	SVMopt.init(t_svm);
+
+	// train the SVM
+	SVMopt.optimize(svm, x, y);
+
+	return svm;
+}
+
+/*
+SVM R_GaussianProcess(SVM svm, Array<double> x, Array<double> y) {
+
+	GaussianProcess t_svm(&svm, x, y);
+	SVM_Optimizer SVMopt;
+	SVMopt.init(t_svm);
+
+	// train the SVM
+	SVMopt.optimize(svm, x, y);
+
+	return svm;
+}
+*/
+
+SVM R_RegularizationNetwork(SVM svm, double gamma, Array<double> x, Array<double> y) {
+
+	RegularizationNetwork t_svm(&svm, gamma);
+	SVM_Optimizer SVMopt;
+	SVMopt.init(t_svm);
+
+	// train the SVM
+	SVMopt.optimize(svm, x, y);
+
+	return svm;
+}
+
+
 RcppExport SEXP SVMregression(SEXP svmParameters) {
 
     try {
         Rcpp::List rparam(svmParameters);
-        unsigned int examples = Rcpp::as<unsigned int>(rparam["examples"]);
-        //Rcpp::NumericVector rates(ratesVec);
-	//Rcpp::as<std::vector <double> >(rates)
+        Rcpp::NumericVector xR = Rcpp::as<Rcpp::NumericVector>(rparam["x"]);
+        Rcpp::NumericVector yR = Rcpp::as<Rcpp::NumericVector>(rparam["y"]);
         double C = Rcpp::as<double>(rparam["C"]);
         double epsilon = Rcpp::as<double>(rparam["epsilon"]);
+        double gamma = Rcpp::as<double>(rparam["gamma"]);
         double sigma = Rcpp::as<double>(rparam["sigma"]);
         string type = Rcpp::as<string>(rparam["type"]);
         string kernel = Rcpp::as<string>(rparam["kernel"]);
 
+		unsigned int examples = xR.size();
         unsigned int e;
-        Rng::seed(42);
 
         // create the sinc problem
         Array<double> x(examples, 1);
-        Array<double> t(examples, 1);
         Array<double> y(examples, 1);
         for (e = 0; e < examples; e++)
         {
-            x(e, 0) = Rng::uni(-12.0, 12.0);            // point
-            t(e, 0) = sinc(x(e, 0));                // target
-            y(e, 0) = t(e, 0) + Rng::gauss(0.0, 0.01);      // label
+            x(e, 0) = xR[e];
+            y(e, 0) = yR[e];
         }
 
         // create the kernel function
-        double gamma = 0.5 / (sigma * sigma);
-        RBFKernel k(gamma);
+        double kgamma = 0.5 / (sigma * sigma);
+        RBFKernel k(kgamma);
 
         // create the SVM for prediction
         SVM svm(&k, false);
 
-        Epsilon_SVM t_svm(&svm, C, epsilon);
-
         // create a training scheme and an optimizer for learning
-        if(type=="eps-svr") {
-        	Epsilon_SVM t_svm(&svm, C, epsilon);
-        } else if(type=="C_svc") {
-        	return R_NilValue;
-        	//C_SVM t_svm(&svm, Cplus, Cminus);
+        if(type=="Epsilon_SVM") {
+            svm = R_Epsilon_SVM(svm, C, epsilon, x, y);
+        } else if(type=="RegularizationNetwork") {
+        	svm = R_RegularizationNetwork(svm, gamma, x, y);
+        } else if(type=="GaussianProcess") {
+        	//svm = R_GaussianProcess(svm, x, y);
         } else {
         	return R_NilValue;
         }
-        SVM_Optimizer SVMopt;
-        SVMopt.init(t_svm);
-
-        // train the SVM
-        SVMopt.optimize(svm, x, y);
 
         // compute the mean squared error on the training data:
         MeanSquaredError mse;
-        double err = mse.error(svm, x, t);
+        double err = mse.error(svm, x, y);
 
         unsigned int dimension = svm.getDimension();
         unsigned int offset = svm.getOffset();
         unsigned int nSV = svm.getExamples();
 
         // Find the support vector
-        Rcpp::NumericVector support(nSV);
+        Rcpp::NumericVector alpha(nSV);
         int i;
-        for (i=0; i<nSV; i++) support[i] = svm.getAlpha(i);
+        for (i=0; i<nSV; i++) alpha[i] = svm.getAlpha(i);
 
         Rcpp::List rl = R_NilValue;
         rl = Rcpp::List::create(Rcpp::Named("error") = err,
         		Rcpp::Named("offset") = offset,
         		Rcpp::Named("nSV") = nSV,
-        		Rcpp::Named("support.vector") = support,
+        		Rcpp::Named("alpha") = alpha,
         		Rcpp::Named("dimension") = dimension);
         return rl;
 
@@ -117,3 +148,4 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
 
     return R_NilValue;
 }
+

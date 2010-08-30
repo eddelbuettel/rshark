@@ -19,36 +19,38 @@
 ## MA 02111-1307, USA
 
 ssvm <- function(x, y = NULL, scaled = TRUE, type = "C_SVM", kernel ="rbfdot", 
-		kpar = "automatic", C = 1, nu = 0.2, epsilon = 0.1, 
+		kpar = "automatic", C = 1, nu = 0.2, epsilon = 0.1, gamma=1, 
 		prob.model = FALSE, class.weights = NULL, cross = 0, fit = TRUE,
 		cache = 40, tol = 0.001, shrinking = TRUE, sigma=1, ..., 
-		subset, na.action = na.omit, examples=50) {
-
-    val <- .Call("SVMregression",
-                 list(examples=examples,
-						 C=C,
-						 epsilon=epsilon,
-						 sigma=sigma,
-						 type=type,
-						 kernel=kernel
-						 ),
-                 PACKAGE="rshark")
-    class(val) <- c("shark.svm")
-    val
+		subset, na.action = na.omit) {
+	
+	val <- .Call("SVMregression",
+			list(	x=x,
+					y=y,
+					C=C,
+					gamma=gamma,
+					epsilon=epsilon,
+					sigma=sigma,
+					type=type,
+					kernel=kernel
+			),
+			PACKAGE="rshark")
+	class(val) <- c("shark.svm")
+	val
 }
 
 # Generic methods
 plot.svm <- function(x, ...) {
-    warning("No plotting available for class", class(x)[1],"\n")
-    invisible(x)
+	warning("No plotting available for class", class(x)[1],"\n")
+	invisible(x)
 }
 
 print.svm <- function(x, digits=5, ...) {
-    cat("Error term", x, "\n")
-    invisible(x)
+	cat("Error term", x, "\n")
+	invisible(x)
 }
 
 summary.svm <- function(object, digits=5, ...) {
-    cat("Detailed summary of SVM model for", class(object)[1], "\n")
-    invisible(object)
+	cat("Detailed summary of SVM model for", class(object)[1], "\n")
+	invisible(object)
 }
