@@ -76,12 +76,12 @@ SVM R_RegularizationNetwork(SVM svm, double gamma, Array<double> x, Array<double
 }
 
 
-RcppExport SEXP SVMregression(SEXP svmParameters) {
+RcppExport SEXP SVMregression(SEXP Xs, SEXP Ys, SEXP svmParameters) {
 
     try {
+        Rcpp::NumericMatrix xR = Rcpp::NumericMatrix(Xs);
+        Rcpp::NumericVector yR = Rcpp::NumericVector(Ys);
         Rcpp::List rparam(svmParameters);
-        Rcpp::NumericVector xR = Rcpp::as<Rcpp::NumericVector>(rparam["x"]);
-        Rcpp::NumericVector yR = Rcpp::as<Rcpp::NumericVector>(rparam["y"]);
         double C = Rcpp::as<double>(rparam["C"]);
         double epsilon = Rcpp::as<double>(rparam["epsilon"]);
         double gamma = Rcpp::as<double>(rparam["gamma"]);
@@ -89,7 +89,7 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
         string type = Rcpp::as<string>(rparam["type"]);
         string kernel = Rcpp::as<string>(rparam["kernel"]);
 
-		unsigned int examples = xR.size();
+		unsigned int examples = xR.rows();
         unsigned int e;
 
         // create the sinc problem
@@ -129,8 +129,7 @@ RcppExport SEXP SVMregression(SEXP svmParameters) {
 
         // Find the support vector
         Rcpp::NumericVector alpha(nSV);
-        int i;
-        for (i=0; i<nSV; i++) alpha[i] = svm.getAlpha(i);
+        for (size_t i=0; i<nSV; i++) alpha[i] = svm.getAlpha(i);
 
         Rcpp::List rl = R_NilValue;
         rl = Rcpp::List::create(Rcpp::Named("error") = err,

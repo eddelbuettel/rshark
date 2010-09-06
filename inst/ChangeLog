@@ -1,3 +1,8 @@
+2010-09-06  Dirk Eddelbuettel  <edd@debian.org>
+
+	* src/svm.cpp: Minor rearrangement of arguments
+	* R/svm.R: Corresponding change
+
 2010-08-22  Shane Conway  <shane.conway@gmail.com>
 
 	* Initial 0.0.1 release
