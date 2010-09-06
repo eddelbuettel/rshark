@@ -25,7 +25,7 @@ ssvm <- function(x, y = NULL, scaled = TRUE, type = "C_SVM", kernel ="rbfdot",
 		subset, na.action = na.omit) {
 
 	val <- .Call("SVMregression",
-                     X, y,
+                     X=x, y=y,
                      list(C=C,
                           gamma=gamma,
                           epsilon=epsilon,
