@@ -6,7 +6,7 @@ R package to wrap the
 ### Status
 
 Not overly active. The repo was recently imported from the old repo at Google
-Code.
+Code.  Starting to work on migrating this to the new version of Shark 3.0.
 
 ### Authors
 
